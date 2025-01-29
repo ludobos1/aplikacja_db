@@ -15,8 +15,6 @@ import java.util.List;
 public class Order_itemsService {
   @Autowired
   private Order_itemsRepository order_itemsRepository;
-  @Autowired
-  private EntityManager entityManager;
 
   public void addItem(Order order, Book book) {
     order_itemsRepository.addBookToOrder(order.getId(), book.getId());

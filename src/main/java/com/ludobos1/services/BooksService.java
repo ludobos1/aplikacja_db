@@ -29,7 +29,9 @@ public class BooksService {
   public List<Book> getBooksByTitleOrAuthorOrCategory(String input) {
     List<Book> books = getBooksByTitle(input);
     books.addAll(getBooksByAuthor(input));
-    books.addAll(getBooksByCategory(categoriesRepository.findByName(input).getId()));
+    if(categoriesRepository.findByName(input) != null) {
+      books.addAll(getBooksByCategory(categoriesRepository.findByName(input).getId()));
+    }
     return books;
   }
   public Book getBookById(int id) {
