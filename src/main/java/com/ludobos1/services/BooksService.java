@@ -2,16 +2,18 @@ package com.ludobos1.services;
 
 import com.ludobos1.encje.Book;
 import com.ludobos1.repositories.BooksRepository;
+import com.ludobos1.repositories.CategoriesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class BooksService {
   @Autowired
   private BooksRepository booksRepository;
+  @Autowired
+  private CategoriesRepository categoriesRepository;
   public List<Book> getAllBooks() {
     return booksRepository.findAll();
   }
@@ -21,9 +23,13 @@ public class BooksService {
   public List<Book> getBooksByAuthor(String author) {
     return booksRepository.findByAuthor(author);
   }
-  public List<Book> getBooksByTitleOrAuthor(String input) {
+  public List<Book> getBooksByCategory(int categoryId) {
+    return booksRepository.findByCategory_Id(categoryId);
+  }
+  public List<Book> getBooksByTitleOrAuthorOrCategory(String input) {
     List<Book> books = getBooksByTitle(input);
     books.addAll(getBooksByAuthor(input));
+    books.addAll(getBooksByCategory(categoriesRepository.findByName(input).getId()));
     return books;
   }
   public Book getBookById(int id) {

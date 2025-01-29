@@ -17,7 +17,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @SpringBootApplication
@@ -51,7 +50,7 @@ public class App extends Application {
         searchButton.setOnAction(actionEvent -> {
             vBox.getChildren().clear();
             vBox.getChildren().add(hBox);
-            List<Book> filteredBooks = booksService.getBooksByTitleOrAuthor(bookName.getText());
+            List<Book> filteredBooks = booksService.getBooksByTitleOrAuthorOrCategory(bookName.getText());
             displayBooks(vBox, filteredBooks);
         });
         viewCartButton.setOnAction(actionEvent -> {
