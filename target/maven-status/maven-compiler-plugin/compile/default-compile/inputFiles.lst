@@ -1,4 +1,7 @@
 /home/okrutnik/BdApp/bd_aplikacja/src/main/java/com/ludobos1/App.java
+/home/okrutnik/BdApp/bd_aplikacja/src/main/java/com/ludobos1/DataSourceConfig.java
+/home/okrutnik/BdApp/bd_aplikacja/src/main/java/com/ludobos1/DataSourceContextHolder.java
+/home/okrutnik/BdApp/bd_aplikacja/src/main/java/com/ludobos1/DynamicDataSource.java
 /home/okrutnik/BdApp/bd_aplikacja/src/main/java/com/ludobos1/encje/Book.java
 /home/okrutnik/BdApp/bd_aplikacja/src/main/java/com/ludobos1/encje/Category.java
 /home/okrutnik/BdApp/bd_aplikacja/src/main/java/com/ludobos1/encje/Order.java

@@ -1,5 +1,6 @@
 package com.ludobos1.services;
 
+import com.ludobos1.DataSourceContextHolder;
 import com.ludobos1.encje.User;
 import com.ludobos1.repositories.UserRepository;
 import jakarta.validation.*;
@@ -53,5 +54,12 @@ public class UserService {
       }
       throw new ConstraintViolationException(violations);
     }
+  }
+  public void loginAsAdmin() {
+    DataSourceContextHolder.setCurrentDb("db1");
+  }
+
+  public void loginAsUser() {
+    DataSourceContextHolder.setCurrentDb("db2");
   }
 }

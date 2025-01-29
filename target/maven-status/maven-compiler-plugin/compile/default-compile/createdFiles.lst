@@ -7,6 +7,7 @@ com/ludobos1/repositories/UserRepository.class
 com/ludobos1/services/PaymentService.class
 com/ludobos1/repositories/BooksRepository.class
 com/ludobos1/services/ReviewService.class
+com/ludobos1/DataSourceConfig.class
 com/ludobos1/encje/Category.class
 com/ludobos1/encje/enums/Role.class
 com/ludobos1/encje/Payment.class
@@ -15,11 +16,13 @@ com/ludobos1/encje/enums/PaymentStatus.class
 com/ludobos1/services/Order_itemsService.class
 com/ludobos1/services/UserService.class
 com/ludobos1/encje/User.class
+com/ludobos1/DataSourceContextHolder.class
 com/ludobos1/repositories/CategoriesRepository.class
 com/ludobos1/App$1.class
 com/ludobos1/services/OrderService.class
 com/ludobos1/encje/Order_items.class
 com/ludobos1/services/BooksService.class
+com/ludobos1/DynamicDataSource.class
 com/ludobos1/repositories/OrdersRepository.class
 com/ludobos1/repositories/ReviewsRepository.class
 com/ludobos1/repositories/Order_itemsRepository.class
