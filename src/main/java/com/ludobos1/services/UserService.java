@@ -62,4 +62,7 @@ public class UserService {
   public void loginAsUser() {
     DataSourceContextHolder.setCurrentDb("db2");
   }
+  public void loginAsEmployee() {
+    DataSourceContextHolder.setCurrentDb("db3");
+  }
 }

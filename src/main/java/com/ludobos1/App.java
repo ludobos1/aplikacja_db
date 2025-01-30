@@ -17,6 +17,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @SpringBootApplication
@@ -28,6 +30,7 @@ public class App extends Application {
     private PaymentService paymentService;
     private Order_itemsService order_itemsService;
     private ReviewService reviewService;
+    private CategoryService categoryService;
     private User myUser;
     private Order myOrder;
 
@@ -106,10 +109,80 @@ public class App extends Application {
         primaryStage.show();
     }
 
+    public void adminClient(Stage primaryStage){
+        VBox vBox = new VBox();
+        Label booksLabel = new Label("Moderate books:");
+        Button showBooksButton = new Button("Books");
+        Label usersLabel = new Label("Moderate users:");
+        Button createUserButton = new Button("Create User");
+        Label categoriesLabel = new Label("Moderate categories:");
+        Button showCategoriesButton = new Button("Categories");
+        Label ordersLabel = new Label("Moderate orders:");
+        Button showOrdersButton = new Button("Orders");
+        Label reviewsLabel = new Label("Moderate reviews:");
+        Button showReviewsButton = new Button("Reviews");
+        showBooksButton.setOnAction(actionEvent -> {
+            List<Book> books = booksService.getAllBooks();
+            displayBooksForAdmin(primaryStage, books);
+
+        });
+        vBox.getChildren().addAll(booksLabel, showBooksButton, usersLabel, createUserButton, categoriesLabel,
+                showCategoriesButton, ordersLabel, showOrdersButton, reviewsLabel, showReviewsButton);
+        primaryStage.setTitle("Admin Client");
+        primaryStage.setScene(new Scene(vBox, 800, 800));
+        primaryStage.show();
+    }
+
+    private void displayBooksForAdmin(Stage primaryStage, List<Book> books){
+        VBox booksBox = new VBox();
+        Button backButton = new Button("Back");
+        booksBox.getChildren().add(backButton);
+        backButton.setOnAction(actionEvent -> {
+            adminClient(primaryStage);
+        });
+        for (Book book : books) {
+            HBox bookHBox = new HBox();
+            Label details = new Label(book.getTitle() + "; " + book.getAuthor() + "; category: " + book.getCategory().getName() +
+                    "; Price: " + book.getPrice() + " $; Stock: " +  book.getStock());
+            Button editButton = new Button("Edit");
+            bookHBox.getChildren().addAll(details, editButton);
+            booksBox.getChildren().add(bookHBox);
+        }
+        primaryStage.setScene(new Scene(booksBox, 700, 700));
+        primaryStage.show();
+    }
+
+    private void editBookScene(Book book){
+        Stage editStage = new Stage();
+        editStage.setTitle("Edit Book");
+        editStage.initModality(Modality.APPLICATION_MODAL);
+        Label title = new Label("Title: ");
+        Label author = new Label("Author: ");
+        Label ISBN = new Label("ISBN: ");
+        Label price = new Label("Price: ");
+        Label category = new Label("Category: ");
+        Label stock = new Label("Stock: ");
+        TextField titleField = new TextField(book.getTitle());
+        TextField authorField = new TextField(book.getAuthor());
+        TextField ISBNField = new TextField(book.getIsbn());
+        TextField priceField = new TextField(book.getPrice().toString());
+        ComboBox<String> categoryField = new ComboBox<>();
+        TextField stockField = new TextField(String.valueOf(book.getStock()));
+        List<Category> categories = categoryService.getAllCategories();
+        for(Category category1 : categories){
+            categoryField.getItems().add(category1.getName());
+        }
+        book.setTitle(titleField.getText());
+        book.setAuthor(authorField.getText());
+        book.setIsbn(ISBNField.getText());
+        book.setPrice(new BigDecimal(priceField.getText()));
+    }
+
     private void displayBooks(VBox vBox, List<Book> books){
         for (Book book : books) {
             HBox bookHBox = new HBox();
-            Label details = new Label(book.getTitle() + "; " + book.getAuthor() + "; category: " + book.getCategory().getName() + "; Price: " + book.getPrice() + " $; Stock: " +  book.getStock());
+            Label details = new Label(book.getTitle() + "; " + book.getAuthor() + "; category: " + book.getCategory().getName() +
+                    "; Price: " + book.getPrice() + " $; Stock: " +  book.getStock());
             Button addToCartButton = new Button("Add to Cart");
             Button writeAReviewButton = new Button("Write a review");
             Button seeReviewsButton = new Button("See Reviews");
@@ -214,7 +287,16 @@ public class App extends Application {
         login.setOnAction(actionEvent -> {
             myUser = userService.authenticateUser(username.getText(), password.getText());
             if(myUser!=null) {
-                userClient(primaryStage);
+                switch(myUser.getRole()) {
+                    case USER:
+                        userService.loginAsUser();
+                        userClient(primaryStage);
+                        break;
+                    case ADMIN:
+                        userService.loginAsAdmin();
+                        adminClient(primaryStage);
+                        break;
+                }
             }
         });
         register.setOnAction(actionEvent -> {
@@ -284,6 +366,7 @@ public class App extends Application {
         order_itemsService = springContext.getBean(Order_itemsService.class);
         paymentService = springContext.getBean(PaymentService.class);
         reviewService = springContext.getBean(ReviewService.class);
+        categoryService = springContext.getBean(CategoryService.class);
     }
 
     @Override

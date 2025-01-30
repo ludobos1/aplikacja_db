@@ -13,10 +13,8 @@ public class DataSourceConfig {
 
   @Bean
   public DataSource dataSource() {
-    // Tworzymy dynamiczny DataSource
     DynamicDataSource dynamicDataSource = new DynamicDataSource();
 
-    // Tworzymy dwa DataSource (db1 i db2)
     DataSource db1 = DataSourceBuilder.create()
             .url("jdbc:mysql://localhost:3306/ksiegarniano?noAccessToProcedureBodies=true")
             .username("ksiegarnia_admin")
@@ -38,14 +36,13 @@ public class DataSourceConfig {
             .driverClassName("com.mysql.cj.jdbc.Driver")
             .build();
 
-    // Przypisujemy bazy do kluczy (db1, db2)
     Map<Object, Object> targetDataSources = new HashMap<>();
     targetDataSources.put("db1", db1);
     targetDataSources.put("db2", db2);
+    targetDataSources.put("db3", db3);
 
     dynamicDataSource.setTargetDataSources(targetDataSources);
 
-    // Ustawiamy domyślne źródło danych (np. db1)
     dynamicDataSource.setDefaultTargetDataSource(db2);
 
     return dynamicDataSource;

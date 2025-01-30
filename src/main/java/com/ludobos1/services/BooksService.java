@@ -3,6 +3,7 @@ package com.ludobos1.services;
 import com.ludobos1.encje.Book;
 import com.ludobos1.repositories.BooksRepository;
 import com.ludobos1.repositories.CategoriesRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,5 +37,12 @@ public class BooksService {
   }
   public Book getBookById(int id) {
     return booksRepository.findById(id);
+  }
+  public Book saveBook(Book book) {
+    return booksRepository.save(book);
+  }
+  @Transactional
+  public Book updateBook(Book book) {
+    return booksRepository.save(book);
   }
 }

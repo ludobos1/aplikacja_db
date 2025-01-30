@@ -21,6 +21,7 @@
 /home/okrutnik/BdApp/bd_aplikacja/src/main/java/com/ludobos1/repositories/ReviewsRepository.java
 /home/okrutnik/BdApp/bd_aplikacja/src/main/java/com/ludobos1/repositories/UserRepository.java
 /home/okrutnik/BdApp/bd_aplikacja/src/main/java/com/ludobos1/services/BooksService.java
+/home/okrutnik/BdApp/bd_aplikacja/src/main/java/com/ludobos1/services/CategoryService.java
 /home/okrutnik/BdApp/bd_aplikacja/src/main/java/com/ludobos1/services/OrderService.java
 /home/okrutnik/BdApp/bd_aplikacja/src/main/java/com/ludobos1/services/Order_itemsService.java
 /home/okrutnik/BdApp/bd_aplikacja/src/main/java/com/ludobos1/services/PaymentService.java
