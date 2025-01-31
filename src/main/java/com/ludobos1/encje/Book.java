@@ -1,6 +1,8 @@
 package com.ludobos1.encje;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
 
 import java.math.BigDecimal;
 
@@ -21,9 +23,11 @@ public class Book {
   @Column(name = "isbn", nullable = false, unique = true, length = 20)
   private String isbn;
 
+  @DecimalMin("0.0")
   @Column(name = "price", nullable = false, precision = 10, scale = 2)
   private BigDecimal price;
 
+  @Min(0)
   @Column(name = "stock", nullable = false)
   private int stock;
 

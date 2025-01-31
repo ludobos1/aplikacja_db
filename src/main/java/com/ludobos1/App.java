@@ -18,7 +18,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 @SpringBootApplication
@@ -33,6 +32,7 @@ public class App extends Application {
     private CategoryService categoryService;
     private User myUser;
     private Order myOrder;
+    private Role myRole = Role.USER;
 
     public static void main(String[] args) {
         launch(args);
@@ -42,19 +42,20 @@ public class App extends Application {
         loginStage(primaryStage);
     }
 
+    // Client usera.
     private void userClient(Stage primaryStage){
         VBox vBox = new VBox();
         HBox hBox = new HBox();
         TextField bookName = new TextField();
         bookName.setPromptText("Enter the book name or author");
         Button searchButton = new Button("Search");
-        Button refreshButton = new Button("Refresh");
+        Button refreshButton = new Button("Back");
         Button viewCartButton = new Button("View cart");
         searchButton.setOnAction(actionEvent -> {
             vBox.getChildren().clear();
             vBox.getChildren().add(hBox);
             List<Book> filteredBooks = booksService.getBooksByTitleOrAuthorOrCategory(bookName.getText());
-            displayBooks(vBox, filteredBooks);
+            displayBooks(vBox, filteredBooks, hBox, primaryStage);
         });
         viewCartButton.setOnAction(actionEvent -> {
             if(myOrder != null) {
@@ -97,88 +98,21 @@ public class App extends Application {
             List<Book> refreshedBooks = booksService.getAllBooks();
             vBox.getChildren().clear();
             vBox.getChildren().add(hBox);
-            displayBooks(vBox, refreshedBooks);
+            displayBooks(vBox, refreshedBooks,hBox, primaryStage);
         });
         hBox.getChildren().addAll(bookName, searchButton, refreshButton, viewCartButton);
         List<Book> allBooks = booksService.getAllBooks();
         vBox.getChildren().add(hBox);
-        displayBooks(vBox, allBooks);
-        Scene scene = new Scene(vBox,900,900);
+        displayBooks(vBox, allBooks,hBox, primaryStage);
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setContent(vBox);
+        Scene scene = new Scene(scrollPane,900,900);
         primaryStage.setTitle("User Client");
         primaryStage.setScene(scene);
         primaryStage.show();
     }
 
-    public void adminClient(Stage primaryStage){
-        VBox vBox = new VBox();
-        Label booksLabel = new Label("Moderate books:");
-        Button showBooksButton = new Button("Books");
-        Label usersLabel = new Label("Moderate users:");
-        Button createUserButton = new Button("Create User");
-        Label categoriesLabel = new Label("Moderate categories:");
-        Button showCategoriesButton = new Button("Categories");
-        Label ordersLabel = new Label("Moderate orders:");
-        Button showOrdersButton = new Button("Orders");
-        Label reviewsLabel = new Label("Moderate reviews:");
-        Button showReviewsButton = new Button("Reviews");
-        showBooksButton.setOnAction(actionEvent -> {
-            List<Book> books = booksService.getAllBooks();
-            displayBooksForAdmin(primaryStage, books);
-
-        });
-        vBox.getChildren().addAll(booksLabel, showBooksButton, usersLabel, createUserButton, categoriesLabel,
-                showCategoriesButton, ordersLabel, showOrdersButton, reviewsLabel, showReviewsButton);
-        primaryStage.setTitle("Admin Client");
-        primaryStage.setScene(new Scene(vBox, 800, 800));
-        primaryStage.show();
-    }
-
-    private void displayBooksForAdmin(Stage primaryStage, List<Book> books){
-        VBox booksBox = new VBox();
-        Button backButton = new Button("Back");
-        booksBox.getChildren().add(backButton);
-        backButton.setOnAction(actionEvent -> {
-            adminClient(primaryStage);
-        });
-        for (Book book : books) {
-            HBox bookHBox = new HBox();
-            Label details = new Label(book.getTitle() + "; " + book.getAuthor() + "; category: " + book.getCategory().getName() +
-                    "; Price: " + book.getPrice() + " $; Stock: " +  book.getStock());
-            Button editButton = new Button("Edit");
-            bookHBox.getChildren().addAll(details, editButton);
-            booksBox.getChildren().add(bookHBox);
-        }
-        primaryStage.setScene(new Scene(booksBox, 700, 700));
-        primaryStage.show();
-    }
-
-    private void editBookScene(Book book){
-        Stage editStage = new Stage();
-        editStage.setTitle("Edit Book");
-        editStage.initModality(Modality.APPLICATION_MODAL);
-        Label title = new Label("Title: ");
-        Label author = new Label("Author: ");
-        Label ISBN = new Label("ISBN: ");
-        Label price = new Label("Price: ");
-        Label category = new Label("Category: ");
-        Label stock = new Label("Stock: ");
-        TextField titleField = new TextField(book.getTitle());
-        TextField authorField = new TextField(book.getAuthor());
-        TextField ISBNField = new TextField(book.getIsbn());
-        TextField priceField = new TextField(book.getPrice().toString());
-        ComboBox<String> categoryField = new ComboBox<>();
-        TextField stockField = new TextField(String.valueOf(book.getStock()));
-        List<Category> categories = categoryService.getAllCategories();
-        for(Category category1 : categories){
-            categoryField.getItems().add(category1.getName());
-        }
-        book.setTitle(titleField.getText());
-        book.setAuthor(authorField.getText());
-        book.setIsbn(ISBNField.getText());
-        book.setPrice(new BigDecimal(priceField.getText()));
-    }
-
-    private void displayBooks(VBox vBox, List<Book> books){
+    private void displayBooks(VBox vBox, List<Book> books, HBox hBox, Stage primaryStage){
         for (Book book : books) {
             HBox bookHBox = new HBox();
             Label details = new Label(book.getTitle() + "; " + book.getAuthor() + "; category: " + book.getCategory().getName() +
@@ -195,10 +129,17 @@ public class App extends Application {
                 if(book.getStock()>0 && myOrder != null) {
                     System.out.println("placing order: " + myOrder.getId());
                     order_itemsService.addItem(myOrder, book);
+                    List<Book> refreshedBooks = booksService.getAllBooks();
+                    vBox.getChildren().clear();
+                    vBox.getChildren().add(hBox);
+                    displayBooks(vBox, refreshedBooks,hBox, primaryStage);
                 }
             });
             writeAReviewButton.setOnAction(actionEvent -> reviewScene(book));
-            seeReviewsButton.setOnAction(actionEvent -> {});
+            seeReviewsButton.setOnAction(actionEvent -> {
+                List<Review> reviews = reviewService.findAll();
+                displayReviews(primaryStage, reviews, book);
+            });
             bookHBox.getChildren().addAll(details, addToCartButton, writeAReviewButton, seeReviewsButton);
             vBox.getChildren().add(bookHBox);
         }
@@ -276,6 +217,292 @@ public class App extends Application {
         myOrder = null;
         stage.close();
     }
+    // Client usera.
+
+    //Client admina.
+    public void adminClient(Stage primaryStage){
+        VBox vBox = new VBox();
+        Label booksLabel = new Label("Moderate books:");
+        Button showBooksButton = new Button("Books");
+        Label usersLabel = new Label("Moderate users:");
+        Button createUserButton = new Button("Create User");
+        Label categoriesLabel = new Label("Moderate categories:");
+        Button showCategoriesButton = new Button("Categories");
+        Label reviewsLabel = new Label("Moderate reviews:");
+        Button showReviewsButton = new Button("Reviews");
+        showBooksButton.setOnAction(actionEvent -> {
+            List<Book> books = booksService.getAllBooks();
+            displayBooksForAdmin(primaryStage, books);
+        });
+        createUserButton.setOnAction(actionEvent -> {
+            Stage createUserStage = new Stage();
+            createUserStage.setTitle("Create User");
+            createUserStage.initModality(Modality.APPLICATION_MODAL);
+            registerStage(createUserStage);
+        });
+        showCategoriesButton.setOnAction(actionEvent -> {
+            List<Category> categories = categoryService.getAllCategories();
+            displayCategories(primaryStage, categories);
+        });
+        showReviewsButton.setOnAction(actionEvent -> {
+            List<Review> reviews = reviewService.findAll();
+            displayReviews(primaryStage, reviews, null);
+        });
+        vBox.getChildren().addAll(booksLabel, showBooksButton, usersLabel, createUserButton, categoriesLabel,
+                showCategoriesButton, reviewsLabel, showReviewsButton);
+        primaryStage.setTitle("Admin Client");
+        primaryStage.setScene(new Scene(vBox, 800, 800));
+        primaryStage.show();
+    }
+
+    private void displayBooksForAdmin(Stage primaryStage, List<Book> books){
+        VBox booksBox = new VBox();
+        Button backButton = new Button("Back");
+        Button addButton = new Button("Add book");
+        booksBox.getChildren().addAll(backButton, addButton);
+        backButton.setOnAction(actionEvent -> {
+            adminClient(primaryStage);
+        });
+        addButton.setOnAction(actionEvent -> {
+            addBookScene(primaryStage);
+        });
+        for (Book book : books) {
+            HBox bookHBox = new HBox();
+            Label details = new Label(book.getTitle() + "; " + book.getAuthor() + "; category: " + book.getCategory().getName() +
+                    "; Price: " + book.getPrice() + " $; Stock: " +  book.getStock());
+            Button editButton = new Button("Edit");
+            Button deleteButton = new Button("Delete");
+            editButton.setOnAction(actionEvent -> editBookScene(book, primaryStage));
+            deleteButton.setOnAction(actionEvent -> {
+                booksService.deleteBook(book);
+                displayBooksForAdmin(primaryStage, booksService.getAllBooks());
+            });
+            bookHBox.getChildren().addAll(details, editButton, deleteButton);
+            booksBox.getChildren().add(bookHBox);
+        }
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setContent(booksBox);
+        primaryStage.setScene(new Scene(scrollPane, 700, 700));
+        primaryStage.show();
+    }
+
+    private void displayCategories(Stage primaryStage, List<Category> categories){
+        VBox categoriesBox = new VBox();
+        Button backButton = new Button("Back");
+        Button addButton = new Button("Add category");
+        categoriesBox.getChildren().addAll(backButton, addButton);
+        backButton.setOnAction(actionEvent -> {
+            adminClient(primaryStage);
+        });
+        addButton.setOnAction(actionEvent -> {
+            addCategoryScene(primaryStage);
+        });
+        for (Category category : categories) {
+            HBox categoryHBox = new HBox();
+            Label categoryName = new Label(category.getName());
+            Button deleteButton = new Button("Delete");
+            deleteButton.setOnAction(actionEvent -> {
+                categoryService.deleteCategory(category);
+                displayCategories(primaryStage, categoryService.getAllCategories());
+            });
+            categoryHBox.getChildren().addAll(categoryName, deleteButton);
+            categoriesBox.getChildren().add(categoryHBox);
+        }
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setContent(categoriesBox);
+        primaryStage.setScene(new Scene(scrollPane, 700, 700));
+        primaryStage.show();
+    }
+
+    private void addCategoryScene(Stage primaryStage){
+        Stage stage = new Stage();
+        VBox vBox = new VBox();
+        stage.setTitle("Add category");
+        stage.initModality(Modality.APPLICATION_MODAL);
+        Label categoryName = new Label("Category: ");
+        TextField categoryField = new TextField();
+        Button addButton = new Button("Add category");
+        addButton.setOnAction(actionEvent -> {
+            Category category = new Category();
+            category.setName(categoryField.getText());
+            if(!categoryField.getText().isEmpty()) {
+                categoryService.addCategory(category);
+                displayCategories(primaryStage, categoryService.getAllCategories());
+                stage.close();
+            } else {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText(null);
+                alert.setContentText("Please enter a valid category name");
+            }
+        });
+        vBox.getChildren().addAll(categoryName, categoryField, addButton);
+        stage.setScene(new Scene(vBox, 800, 800));
+        stage.show();
+    }
+
+    private void addBookScene(Stage primaryStage){
+        Stage stage = new Stage();
+        VBox vBox = new VBox();
+        stage.setTitle("Add Book");
+        stage.initModality(Modality.APPLICATION_MODAL);
+        Label title = new Label("Title: ");
+        Label author = new Label("Author: ");
+        Label ISBN = new Label("ISBN: ");
+        Label price = new Label("Price: ");
+        Label category = new Label("Category: ");
+        Label stock = new Label("Stock: ");
+        TextField titleField = new TextField();
+        TextField authorField = new TextField();
+        TextField ISBNField = new TextField();
+        TextField priceField = new TextField();
+        ComboBox<String> categoryField = new ComboBox<>();
+        TextField stockField = new TextField();
+        List<Category> categories = categoryService.getAllCategories();
+        Button addButton = new Button("Add");
+        addButton.setOnAction(actionEvent -> {
+            Book book = new Book();
+            addBook(titleField, authorField, ISBNField, priceField, categoryField, stockField, book, stage, primaryStage);
+        });
+        for(Category category1 : categories){
+            categoryField.getItems().add(category1.getName());
+        }
+        vBox.getChildren().addAll(title,titleField, author, authorField, ISBN, ISBNField, price, priceField,
+                category, categoryField, stock, stockField, addButton);
+        stage.setScene(new Scene(vBox, 800, 800));
+        stage.show();
+    }
+
+    private void editBookScene(Book book, Stage primaryStage){
+        Stage editStage = new Stage();
+        VBox editBox = new VBox();
+        editStage.setTitle("Edit Book");
+        editStage.initModality(Modality.APPLICATION_MODAL);
+        Label title = new Label("Title: ");
+        Label author = new Label("Author: ");
+        Label ISBN = new Label("ISBN: ");
+        Label price = new Label("Price: ");
+        Label category = new Label("Category: ");
+        Label stock = new Label("Stock: ");
+        TextField titleField = new TextField(book.getTitle());
+        TextField authorField = new TextField(book.getAuthor());
+        TextField ISBNField = new TextField(book.getIsbn());
+        TextField priceField = new TextField(book.getPrice().toString());
+        ComboBox<String> categoryField = new ComboBox<>();
+        TextField stockField = new TextField(String.valueOf(book.getStock()));
+        Button editButton = new Button("Edit");
+        List<Category> categories = categoryService.getAllCategories();
+        for(Category category1 : categories){
+            categoryField.getItems().add(category1.getName());
+        }
+        editButton.setOnAction(actionEvent -> {
+            addBook(titleField, authorField, ISBNField, priceField, categoryField, stockField, book, editStage, primaryStage);
+        });
+        editBox.getChildren().addAll(title,titleField, author, authorField, ISBN, ISBNField, price, priceField,
+                category, categoryField, stock, stockField, editButton);
+        editStage.setScene(new Scene(editBox, 700, 700));
+        editStage.show();
+    }
+
+    private void addBook(TextField titleField, TextField authorField,TextField ISBNField, TextField priceField, ComboBox<String> categoryField, TextField stockField, Book book, Stage stage, Stage primaryStage){
+        try {
+            if (!titleField.getText().isEmpty() && !authorField.getText().isEmpty() && !ISBNField.getText().isEmpty() &&
+                    !priceField.getText().isEmpty() && !stockField.getText().isEmpty() && !categoryField.getItems().isEmpty()) {
+                book.setTitle(titleField.getText());
+                book.setAuthor(authorField.getText());
+                book.setIsbn(ISBNField.getText());
+                book.setPrice(new BigDecimal(priceField.getText()));
+                book.setCategory(categoryService.getCategoryByName(categoryField.getValue()));
+                book.setStock(Integer.parseInt(stockField.getText()));
+                String updateResult = booksService.addBook(book);
+                if (updateResult.equals("Book updated")){
+                    displayBooksForAdmin(primaryStage, booksService.getAllBooks());
+                    stage.close();
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Error");
+                    alert.setHeaderText(null);
+                    alert.setContentText(updateResult);
+                    alert.showAndWait();
+                }
+            } else {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText(null);
+                alert.setContentText("Fields cannot be empty");
+                alert.showAndWait();
+            }
+        } catch (NumberFormatException e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText(null);
+            alert.setContentText("Please enter valid numbers in field Price and Stock.");
+            alert.showAndWait();
+        }
+    }
+    private void displayReviews(Stage primaryStage, List<Review> reviews, Book book){
+        VBox allReviewsBox = new VBox();
+        Button backButton = new Button("Back");
+        backButton.setOnAction(actionEvent -> {
+            if (myRole==Role.ADMIN){
+                adminClient(primaryStage);
+            } else if (myRole==Role.USER){
+                userClient(primaryStage);
+            } else {
+                employeeClient(primaryStage);
+            }
+        });
+        allReviewsBox.getChildren().add(backButton);
+        for(Review review : reviews){
+            if(myRole == Role.USER){
+                if (review.getBook().getId() == book.getId()){
+                    displaySingleReview(review, primaryStage, allReviewsBox, book);
+                }
+            } else {
+                displaySingleReview(review, primaryStage, allReviewsBox, book);
+            }
+        }
+        primaryStage.setScene(new Scene(allReviewsBox, 800, 800));
+    }
+    private void displaySingleReview(Review review, Stage primaryStage, VBox allReviewsBox, Book book){
+        HBox hBox = new HBox();
+        VBox vBox = new VBox();
+        Label userLabel = new Label(review.getUser().getUsername());
+        TextArea commentArea = new TextArea(review.getComment());
+        commentArea.setEditable(false);
+        commentArea.setPrefSize(200,100);
+        Label starsLabel = new Label("  stars: " + review.getRating() + "/5");
+        vBox.getChildren().addAll(starsLabel, commentArea);
+        hBox.getChildren().addAll(userLabel,vBox);
+        if (myRole==Role.USER){
+            if (review.getUser().getId().equals(myUser.getId())){
+                Button deleteMyReviewButton = new Button("Delete");
+                deleteMyReviewButton.setOnAction(actionEvent -> {
+                    reviewService.delete(review);
+                    displayReviews(primaryStage, reviewService.findAll(), book);
+                });
+                hBox.getChildren().add(deleteMyReviewButton);
+            }
+        } else if (myRole==Role.ADMIN||myRole==Role.EMPLOYEE){
+            Button deleteReviewButton = new Button("Delete");
+            deleteReviewButton.setOnAction(actionEvent -> {
+                reviewService.delete(review);
+                displayReviews(primaryStage, reviewService.findAll(), book);
+            });
+            Label bookLabel = new Label("  review for: " + review.getBook().getTitle());
+            hBox.getChildren().addAll(deleteReviewButton, bookLabel);
+        }
+        allReviewsBox.getChildren().add(hBox);
+    }
+    //Client admina.
+
+    //Client pracownika
+
+    private void employeeClient(Stage primaryStage){
+
+    }
+
+    //Client pracownika
 
     private void loginStage(Stage primaryStage){
         PasswordField password = new PasswordField();
@@ -289,12 +516,19 @@ public class App extends Application {
             if(myUser!=null) {
                 switch(myUser.getRole()) {
                     case USER:
+                        myRole = Role.USER;
                         userService.loginAsUser();
                         userClient(primaryStage);
                         break;
                     case ADMIN:
+                        myRole = Role.ADMIN;
                         userService.loginAsAdmin();
                         adminClient(primaryStage);
+                        break;
+                    case EMPLOYEE:
+                        myRole = Role.EMPLOYEE;
+                        userService.loginAsEmployee();
+                        employeeClient(primaryStage);
                         break;
                 }
             }
@@ -320,21 +554,33 @@ public class App extends Application {
         PasswordField confirmPassword = new PasswordField();
         Button register = new Button("Register");
         VBox root = new VBox();
-        root.getChildren().addAll(emailArea, email,usernameArea, username,passwordArea, password,confirmPasswordArea, confirmPassword, register);
+        root.getChildren().addAll(emailArea, email,usernameArea, username,passwordArea, password,confirmPasswordArea, confirmPassword);
+        if(myRole == Role.ADMIN){
+            Label roleArea = new Label("role:");
+            ComboBox<Role> roleComboBox = new ComboBox<>();
+            roleComboBox.getItems().addAll(Role.EMPLOYEE, Role.ADMIN, Role.USER);
+            roleComboBox.setValue(Role.EMPLOYEE);
+            root.getChildren().addAll(roleArea, roleComboBox);
+            register.setOnAction(actionEvent -> {
+                registerHandler(username, password, email, confirmPassword, primaryStage, roleComboBox.getValue());
+            });
+        }else{
+            register.setOnAction(actionEvent -> {
+                registerHandler(username, password, email, confirmPassword, primaryStage, Role.USER);
+            });
+        }
+        root.getChildren().add(register);
         Scene scene = new Scene(root,300,300);
         primaryStage.setScene(scene);
         primaryStage.show();
-        register.setOnAction(actionEvent -> {
-            registerHandler(username, password, email, confirmPassword, primaryStage);
-        });
     }
 
-    private void registerHandler(TextField username, PasswordField password, TextField email, PasswordField confirmPassword, Stage primaryStage){
+    private void registerHandler(TextField username, PasswordField password, TextField email, PasswordField confirmPassword, Stage primaryStage, Role role){
         if(password.getText().equals(confirmPassword.getText())) {
             User newUser = new User();
             newUser.setUsername(username.getText());
             newUser.setPassword(password.getText());
-            newUser.setRole(Role.USER);
+            newUser.setRole(role);
             newUser.setEmail(email.getText());
             String response = userService.registerUser(newUser);
             if(response.equals("account registered successfully")){
@@ -343,7 +589,11 @@ public class App extends Application {
                 alert.setHeaderText(null);
                 alert.setContentText(response);
                 alert.showAndWait();
-                loginStage(primaryStage);
+                if(myRole == Role.USER) {
+                    loginStage(primaryStage);
+                }else{
+                    primaryStage.close();
+                }
             }else {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error");

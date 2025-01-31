@@ -16,7 +16,7 @@ public class DataSourceConfig {
     DynamicDataSource dynamicDataSource = new DynamicDataSource();
 
     DataSource db1 = DataSourceBuilder.create()
-            .url("jdbc:mysql://localhost:3306/ksiegarniano?noAccessToProcedureBodies=true")
+            .url("jdbc:mysql://localhost:3306/ksiegarnia?noAccessToProcedureBodies=true")
             .username("ksiegarnia_admin")
             .password("maslo")
             .driverClassName("com.mysql.cj.jdbc.Driver")

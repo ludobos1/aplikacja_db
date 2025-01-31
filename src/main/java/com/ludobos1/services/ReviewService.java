@@ -8,6 +8,7 @@ import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
+import java.util.List;
 
 @Service
 public class ReviewService {
@@ -20,5 +21,11 @@ public class ReviewService {
     }catch (JpaSystemException e){
       return "error - user already added a review to this book";
     }
+  }
+  public void delete(Review review) {
+    ReviewsRepository.delete(review);
+  }
+  public List<Review> findAll() {
+    return ReviewsRepository.findAll();
   }
 }
