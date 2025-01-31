@@ -107,7 +107,7 @@ public class App extends Application {
             List<Order> orders = orderService.findAllOrders();
             displayOrders(primaryStage, orders);
         });
-        hBox.getChildren().addAll(bookName, searchButton, refreshButton, viewCartButton);
+        hBox.getChildren().addAll(bookName, searchButton, refreshButton, viewCartButton, viewMyOrdersButton);
         List<Book> allBooks = booksService.getAllBooks();
         vBox.getChildren().add(hBox);
         displayBooks(vBox, allBooks,hBox, primaryStage);
@@ -657,6 +657,13 @@ public class App extends Application {
                         employeeClient(primaryStage);
                         break;
                 }
+            } else {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Login Error");
+                alert.setHeaderText(null);
+                alert.setContentText
+                        ("Invalid username or password");
+                alert.showAndWait();
             }
         });
         register.setOnAction(actionEvent -> {
