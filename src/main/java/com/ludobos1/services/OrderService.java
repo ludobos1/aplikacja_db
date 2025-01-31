@@ -6,6 +6,8 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class OrderService {
   @Autowired
@@ -19,5 +21,8 @@ public class OrderService {
   }
   public Order findOrderById(int id) {
     return ordersRepository.findById(id);
+  }
+  public List<Order> findAllOrders() {
+    return ordersRepository.findAll();
   }
 }

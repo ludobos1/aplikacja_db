@@ -9,6 +9,7 @@ import com.ludobos1.services.*;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
@@ -51,6 +52,7 @@ public class App extends Application {
         Button searchButton = new Button("Search");
         Button refreshButton = new Button("Back");
         Button viewCartButton = new Button("View cart");
+        Button viewMyOrdersButton = new Button("View my orders");
         searchButton.setOnAction(actionEvent -> {
             vBox.getChildren().clear();
             vBox.getChildren().add(hBox);
@@ -96,9 +98,14 @@ public class App extends Application {
         });
         refreshButton.setOnAction(actionEvent -> {
             List<Book> refreshedBooks = booksService.getAllBooks();
+            bookName.clear();
             vBox.getChildren().clear();
             vBox.getChildren().add(hBox);
             displayBooks(vBox, refreshedBooks,hBox, primaryStage);
+        });
+        viewMyOrdersButton.setOnAction(actionEvent -> {
+            List<Order> orders = orderService.findAllOrders();
+            displayOrders(primaryStage, orders);
         });
         hBox.getChildren().addAll(bookName, searchButton, refreshButton, viewCartButton);
         List<Book> allBooks = booksService.getAllBooks();
@@ -257,11 +264,24 @@ public class App extends Application {
 
     private void displayBooksForAdmin(Stage primaryStage, List<Book> books){
         VBox booksBox = new VBox();
+        HBox buttonsBox = new HBox();
+        TextField bookName = new TextField();
+        bookName.setPromptText("Enter the book name or author");
+        Button searchButton = new Button("Search");
         Button backButton = new Button("Back");
         Button addButton = new Button("Add book");
-        booksBox.getChildren().addAll(backButton, addButton);
+        buttonsBox.getChildren().addAll(bookName, searchButton, backButton, addButton);
+        booksBox.getChildren().add(buttonsBox);
+        searchButton.setOnAction(actionEvent -> {
+            List<Book> filteredBooks = booksService.getBooksByTitleOrAuthorOrCategory(bookName.getText());
+            displayBooksForAdmin(primaryStage, filteredBooks);
+        });
         backButton.setOnAction(actionEvent -> {
-            adminClient(primaryStage);
+            if(myRole == Role.ADMIN) {
+                adminClient(primaryStage);
+            } else if(myRole == Role.EMPLOYEE){
+                employeeClient(primaryStage);
+            }
         });
         addButton.setOnAction(actionEvent -> {
             addBookScene(primaryStage);
@@ -499,7 +519,113 @@ public class App extends Application {
     //Client pracownika
 
     private void employeeClient(Stage primaryStage){
+        VBox vBox = new VBox();
+        Label orderLabel = new Label("Handle orders:");
+        Button orderButton = new Button("Orders");
+        Label booksLabel = new Label("Moderate books:");
+        Button booksButton = new Button("Books");
+        Label reviewsLabel = new Label("Moderate reviews:");
+        Button reviewsButton = new Button("Reviews");
+        booksButton.setOnAction(actionEvent -> {
+            List<Book> books = booksService.getAllBooks();
+            displayBooksForAdmin(primaryStage, books);
+        });
+        reviewsButton.setOnAction(actionEvent -> {
+            List<Review> reviews = reviewService.findAll();
+            displayReviews(primaryStage, reviews, null);
+        });
+        orderButton.setOnAction(actionEvent -> {
+            List<Order> orders = orderService.findAllOrders();
+            displayOrders(primaryStage, orders);
+        });
+        vBox.getChildren().addAll(orderLabel, orderButton, booksLabel, booksButton, reviewsLabel, reviewsButton);
+        primaryStage.setScene(new Scene(vBox, 800, 800));
+        primaryStage.show();
+    }
 
+    private void displayOrders(Stage primaryStage, List<Order> orders){
+        Stage stage = new Stage();
+        stage.setTitle("Orders");
+        stage.initModality(Modality.APPLICATION_MODAL);
+        GridPane gp = new GridPane();
+        Button backButton = new Button("Back");
+        backButton.setOnAction(actionEvent -> {
+            if (myRole==Role.USER){
+                userClient(primaryStage);
+            }else if (myRole==Role.EMPLOYEE){
+                employeeClient(primaryStage);
+            }
+        });
+        gp.add(backButton, 0, 0);
+        int i = 1;
+        for (Order order : orders){
+            if(myRole==Role.USER) {
+                if(order.getUser().getId().equals(myUser.getId())) {
+                    displaySingleOrder(order, gp, i, primaryStage);
+                }
+            } else {
+                displaySingleOrder(order, gp, i, primaryStage);
+            }
+            i++;
+        }
+        gp.setHgap(10);
+        gp.setVgap(10);
+        primaryStage.setScene(new Scene(gp, 800, 800));
+        primaryStage.show();
+    }
+
+    private void displaySingleOrder(Order order, GridPane gp, int i, Stage primaryStage){
+        VBox user = new VBox();
+        Label userLabel = new Label("user:");
+        Label userLabel1 = new Label(order.getUser().getUsername());
+        user.getChildren().addAll(userLabel,userLabel1);
+        gp.add(user, 0, i);
+        VBox status = new VBox();
+        Label statusLabel = new Label("Status:");
+        Label statusLabel1 = new Label(order.getStatus().toString());
+        status.getChildren().addAll(statusLabel,statusLabel1);
+        gp.add(status, 1, i);
+        List<Order_items> orderItems = order_itemsService.findByOrderId(order.getId());
+        VBox items = new VBox();
+        Label itemsLabel = new Label("Items:");
+        items.getChildren().add(itemsLabel);
+        for (Order_items orderItem : orderItems){
+            HBox item = new HBox();
+            Label itemLabel = new Label(orderItem.getBook().getTitle()+": ");
+            Label priceLabel = new Label(orderItem.getPrice()+" $");
+            item.getChildren().addAll(itemLabel,priceLabel);
+            items.getChildren().add(item);
+        }
+        gp.add(items, 2, i);
+        VBox price = new VBox();
+        Label priceSum = new Label("Total price:");
+        Label priceSum1 = new Label(order.getTotalPrice() + " $");
+        price.getChildren().addAll(priceSum, priceSum1);
+        gp.add(price, 3, i);
+        if (myRole==Role.EMPLOYEE){
+            Button changeStatusButton = new Button("Change Status");
+            changeStatusButton.setOnAction(actionEvent -> {
+                Stage stage = new Stage();
+                stage.setTitle("Change Status");
+                stage.initModality(Modality.APPLICATION_MODAL);
+                VBox vBox = new VBox();
+                Label pickStatusLabel = new Label("Pick Status:");
+                ComboBox<OrderStatus> pickStatus = new ComboBox<>();
+                pickStatus.getItems().addAll(OrderStatus.PROCESSING, OrderStatus.COMPLETED, OrderStatus.CANCELLED);
+                pickStatus.setValue(OrderStatus.PROCESSING);
+                Button confirmButton = new Button("Confirm");
+                confirmButton.setOnAction(actionEvent1 -> {
+                    order.setStatus(pickStatus.getValue());
+                    orderService.updateOrder(order);
+                    displayOrders(primaryStage, orderService.findAllOrders());
+                    stage.close();
+                });
+                vBox.getChildren().addAll(pickStatusLabel,pickStatus, confirmButton);
+                stage.setScene(new Scene(vBox, 400, 400));
+                stage.show();
+            });
+            gp.add(changeStatusButton, 4, i);
+        }
     }
 
     //Client pracownika

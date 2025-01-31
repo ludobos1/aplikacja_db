@@ -29,10 +29,10 @@ public class BooksService {
     return booksRepository.findAll();
   }
   public List<Book> getBooksByTitle(String title) {
-    return booksRepository.findByTitle(title);
+    return booksRepository.findByTitleContaining(title);
   }
   public List<Book> getBooksByAuthor(String author) {
-    return booksRepository.findByAuthor(author);
+    return booksRepository.findByAuthorContaining(author);
   }
   public List<Book> getBooksByCategory(int categoryId) {
     return booksRepository.findByCategory_Id(categoryId);
